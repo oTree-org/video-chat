@@ -1,0 +1,29 @@
+{{ block content }}
+
+{#
+What this example needs in order to work:
+(1) _static/ folder must contain video_chat.js
+(2) Include the below script tags
+(3) 2 video tags, with ids 'localVideo' and 'remoteVideo'.
+Note: this is for 2 players only.
+#}
+
+<div class="row">
+    <div class="col">
+        <h4>Your video</h4>
+        <!-- you can change the width to whatever you want -->
+        <video id="localVideo" playsinline autoplay muted width="200px"></video>
+    </div>
+    <div class="col">
+        <h4>Other player's video</h4>
+        <video id="remoteVideo" playsinline autoplay width="600px"></video>
+    </div>
+</div>
+
+<p><i>You can put your game content such as formfields, chat box, etc here...</i></p>
+
+<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+<script src="{{ static 'video_chat.js' }}"></script>
+
+
+{{ endblock }}
