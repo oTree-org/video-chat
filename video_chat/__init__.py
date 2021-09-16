@@ -28,7 +28,8 @@ class Player(BasePlayer):
 class Main(Page):
     @staticmethod
     def live_method(player, data):
-        return {3 - player.id_in_group: data}
+        if 'video_chat' in data:
+            return {3 - player.id_in_group: data}
 
 
 page_sequence = [Main]

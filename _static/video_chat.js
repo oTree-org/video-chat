@@ -9,7 +9,7 @@ const remoteVideo = document.getElementById('remoteVideo');
 function gotRemoteStream(e) {
     if (remoteVideo.srcObject !== e.streams[0]) {
         remoteVideo.srcObject = e.streams[0];
-        console.log('pc received remote stream');
+        console.log('pc received remote stream!');
     }
 }
 
@@ -22,13 +22,8 @@ function makePeerConnection() {
         ]
     }
     pc = new RTCPeerConnection(configuration);
-    pc.addEventListener('icecandidate', e => onIceCandidate(pc, e));
-    pc.addEventListener('connectionstatechange', event => {
-        console.log('connectionstatechange', pc.connectionState)
-        if (pc.connectionState === 'connected') {
-            console.log('peers connected!')
-        }
-    });
+    pc.addEventListener('icecandidate', onIceCandidate);
+    pc.addEventListener('connectionstatechange', onConnectionStateChange);
     pc.addEventListener('track', gotRemoteStream);
 
     return pc;
@@ -36,6 +31,12 @@ function makePeerConnection() {
 
 pc = makePeerConnection();
 
+function onConnectionStateChange(event) {
+    console.log('connection state change:', pc.connectionState)
+    if (pc.connectionState === 'connected') {
+        console.log('peers connected!')
+    }
+}
 
 let localStream;
 
@@ -43,26 +44,33 @@ async function start() {
     try {
         let mediaDevices = navigator.mediaDevices;
         if (mediaDevices === undefined && window.location.href.startsWith('http:')) {
-            alert("Webcam access not available on http:// URLs. Try using Chrome or change the url to https://");
+            alert("Webcam access not available on http:// URLs. If you are on Heroku, try changing the url to start with https://");
             return;
         }
-        const stream = await navigator.mediaDevices.getUserMedia({audio: true, video: true});
+        const stream = await mediaDevices.getUserMedia({audio: true, video: true});
         console.log('Received local stream');
         localVideo.srcObject = stream;
         localStream = stream;
         localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
     } catch (e) {
-        console.log('error is', e);
+        console.log('error:')
+        console.log(e);
         alert(`Error with getUserMedia(): ${e.name}`);
     }
 }
 
+function liveSendVideoChat(data) {
+    // namespace all messages so that it doesn't interfere with the user's other live page messages
+    data.video_chat = true;
+    liveSend(data);
+}
 
-async function onIceCandidate(pc, event) {
-    console.log('candidate', event);
+async function onIceCandidate(event) {
+    console.log('in onIceCandidate');
     if (event.candidate) {
-        liveSend({type: 'ice_candidate', 'ice_candidate': event.candidate});
+        console.log('event has candidate');
+        liveSendVideoChat({type: 'ice_candidate', 'ice_candidate': event.candidate});
     }
 }
 
@@ -76,8 +84,8 @@ async function call() {
     startTime = window.performance.now();
     const offer = await pc.createOffer(offerOptions);
     await pc.setLocalDescription(offer);
-    liveSend({type: 'offer', offer: offer});
-    console.log('did liveSend')
+    console.log("created offer")
+    liveSendVideoChat({type: 'offer', sdp: offer});
 }
 
 
@@ -87,20 +95,14 @@ const offerOptions = {
 };
 
 
-function liveRecv(data) {
-    console.log('in liveRecv')
+function liveRecvVideoChat(data) {
     let type = data.type;
-    console.log(type);
+    console.log('in liveRecv:', type)
     if (type === 'answer') {
-        let offer = new RTCSessionDescription(data.answer);
-        pc.setRemoteDescription(offer).then(e => {
-            console.log('set remote description');
-        });
+        onAnswer(data.sdp);
     }
     if (type === 'offer') {
-        let offer = new RTCSessionDescription(data.offer);
-        onOffer(offer).then(e => {
-        });
+        onOffer(data.sdp);
     }
     if (type === 'ice_candidate') {
         pc.addIceCandidate(data.ice_candidate);
@@ -108,13 +110,18 @@ function liveRecv(data) {
 }
 
 async function onOffer(desc) {
-    //console.log(`Offer from pc1\n${desc.sdp}`);
-    //pc = makePeerConnection();
+    let sdp = new RTCSessionDescription(desc);
+    console.log("Received offer")
     await pc.setRemoteDescription(desc);
     console.log('setRemoteDescription')
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     console.log('setLocalDescription')
-    liveSend({type: 'answer', answer: answer});
+    liveSendVideoChat({type: 'answer', sdp: answer});
+}
 
+async function onAnswer(desc) {
+    let sdp = new RTCSessionDescription(desc);
+    await pc.setRemoteDescription(sdp);
+    console.log('set remote description');
 }

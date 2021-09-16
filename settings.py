@@ -1,11 +1,7 @@
 from os import environ
 
 SESSION_CONFIGS = [
-    dict(
-        name='video_chat',
-        app_sequence=['video_chat'],
-        num_demo_participants=2,
-    ),
+    dict(name='video_chat', app_sequence=['video_chat'], num_demo_participants=2),
 ]
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs
@@ -37,5 +33,6 @@ DEMO_PAGE_INTRO_HTML = """ """
 SECRET_KEY = '1564016201268'
 
 ROOMS = [
-    dict(name='test', display_name="test", participant_label_file="labels.txt"),
+    dict(name=f'test{x}', display_name=f'test{x}', participant_label_file="labels.txt")
+    for x in range(1, 40)
 ]
