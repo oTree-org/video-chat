@@ -110,9 +110,7 @@ function liveRecvVideoChat(data) {
 }
 
 async function onOffer(desc) {
-    let sdp = new RTCSessionDescription(desc);
-    console.log("Received offer")
-    await pc.setRemoteDescription(desc);
+    await setRemote(desc);
     console.log('setRemoteDescription')
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
@@ -121,7 +119,11 @@ async function onOffer(desc) {
 }
 
 async function onAnswer(desc) {
+    await setRemote(desc);
+    console.log('set remote description');
+}
+
+async function setRemote(desc) {
     let sdp = new RTCSessionDescription(desc);
     await pc.setRemoteDescription(sdp);
-    console.log('set remote description');
 }

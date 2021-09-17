@@ -5,7 +5,7 @@ What this example needs in order to work:
 (1) _static/ folder must contain video_chat.js
 (2) Include the below scripts
 (3) 2 video tags, with ids 'localVideo' and 'remoteVideo'.
-Note: this is for 2 players only.
+Note: this is for 2-player groups only.
 #}
 
 <div class="row">
@@ -20,7 +20,11 @@ Note: this is for 2 players only.
     </div>
 </div>
 
-<p><i>You can put your game content such as formfields, chat box, etc here...</i></p>
+<h4>Chat</h4>
+{{ chat }}
+
+<p><i>You can put your game content such as formfields, etc here...</i></p>
+<p><i>If the chat is not working, check your browser's JavaScript console for errors.</i></p>
 
 <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 <script src="{{ static 'video_chat.js' }}"></script>
